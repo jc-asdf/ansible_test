@@ -1,0 +1,4 @@
+---
+- include: security_group-http.yml
+- include: security_group-ssh.yml
+- include: launch_instances.yml instance_type_tag=web exact_count=2

@@ -1,0 +1,30 @@
+- name: Launch ec2 instance
+  local_action:
+    module: ec2
+    key_name: "{{ key_name }}"
+    group: "{{ group }}"
+    instance_type: "{{ instance_type }}"
+    image: "{{ image }}"
+    region: "{{ region }}"
+    instance_tags:
+      type: "{{ instance_type_tag }}"
+    wait: true
+    exact_count: "{{ exact_count }}"
+  register: launched
+
+- name: Add ec2 instance to group
+  local_action:
+    module: add_host
+    hostname: "{{ item.public_ip }}"
+    groupname: "{{ instance_type_tag }}"
+  with_items: launched.instances
+
+- name: Wait for SSH to come up
+  local_action:
+    module: wait_for
+    host: "{{ item.public_dns_name }}"
+    port: 22
+    delay: 60
+    timeout: 320
+    state: started
+  with_items: launched.instances

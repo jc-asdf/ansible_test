@@ -1,0 +1,17 @@
+- name: set up EC2 security group for HTTP and HTTPS access
+  local_action:
+    module: ec2_group
+    name: http
+    description: HTTP and HTTPS access from all IPs
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        from_port: 80
+        to_port: 80
+        cidr_ip: 0.0.0.0/0
+      - proto: tcp
+        from_port: 443
+        to_port: 443
+        cidr_ip: 0.0.0.0/0
+
+

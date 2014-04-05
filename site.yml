@@ -1,0 +1,4 @@
+---
+- include: set_up_cloud.yml
+- include: web_servers.yml
+- include: db_servers.yml

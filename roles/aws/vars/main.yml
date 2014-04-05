@@ -1,0 +1,8 @@
+---
+key_name: JC
+instance_type: t1.micro
+image: ami-fa9cf1ca
+group: ['http', 'ssh']
+region: us-west-2
+instance_type_tag: unassigned
+exact_count: 1

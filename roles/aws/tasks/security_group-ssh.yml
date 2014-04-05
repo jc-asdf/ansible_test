@@ -1,0 +1,13 @@
+- name: set up EC2 security group for SSH access
+  local_action:
+    module: ec2_group
+    name: ssh
+    description: SSH access from all IPs
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        from_port: 22
+        to_port: 22
+        cidr_ip: 0.0.0.0/0
+
+
