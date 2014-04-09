@@ -1,4 +1,8 @@
-- name: Launch ec2 instance
+---
+# Launch instances and add them to groups so we can work on them right
+# away - in theory.
+
+- name: EC2 | Launch instance
   local_action:
     module: ec2
     key_name: "{{ key_name }}"
@@ -7,24 +11,34 @@
     image: "{{ image }}"
     region: "{{ region }}"
     instance_tags:
-      type: "{{ instance_type_tag }}"
+      type: "{{ group_name }}"
     wait: true
     exact_count: "{{ exact_count }}"
+    count_tag:
+      type: "{{ group_name }}"
   register: launched
 
-- name: Add ec2 instance to group
+# This didn't work as I'd hoped.  I'd originally hoped
+# to use this to allow starting from an empty host list
+# and seamlessly chaining through all created hosts.
+# This works, sort of, but there's data in hostvars that
+# is populated by the inventory script that doesn't end
+# up getting populated this way.  Another one I'd have
+# to discuss with someone to see how they do it in real
+# life.
+
+- name: EC2 | Add new instance to group
   local_action:
     module: add_host
-    hostname: "{{ item.public_ip }}"
-    groupname: "{{ instance_type_tag }}"
+    name: "{{ item.public_dns_name }}"
+    groups: tag_type_{{ group_name }}
   with_items: launched.instances
+  when: launched.instances
 
-- name: Wait for SSH to come up
-  local_action:
-    module: wait_for
+- name: EC2 | Wait for new instances to listen on port 22
+  wait_for:
+    state: started
     host: "{{ item.public_dns_name }}"
     port: 22
-    delay: 60
-    timeout: 320
-    state: started
   with_items: launched.instances
+  when: launched.instances

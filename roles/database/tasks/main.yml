@@ -1,0 +1,31 @@
+---
+# Set up MySQL
+
+- name: MySQL | Install package
+  apt: pkg=mysql-server
+- name: MySQL | Install python MySQL package
+  apt: pkg=python-mysqldb
+
+- name: MySQL | Install main config
+  template: src=system_my_cnf.j2 dest=/etc/mysql/my.cnf
+  notify:
+  - restart mysql
+
+# When the replication config is changed, it needs an immediate restart
+# so that the later operations work.  I couldn't find a way to do an
+# immediate action with notify, so I hooked it into another task.
+- name: MySQL | Install replication config
+  template: src=replication.cnf.j2 dest=/etc/mysql/conf.d/replication.cnf 
+  notify:
+  - restart mysql
+  register: mysql_replica_config
+
+- name: MySQL | Reload the config immediately
+  service: 
+    name: mysql
+    state: restarted
+  when: mysql_replica_config.changed
+
+- include: mysql_secrets_file.yml
+- include: mysql_secure.yml server_hostname={{ ansible_hostname }}
+- include: mysql_replication.yml mysql_role={{ mysql_role }}

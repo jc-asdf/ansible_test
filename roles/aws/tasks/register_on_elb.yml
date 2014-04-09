@@ -1,0 +1,14 @@
+---
+# Add an instance to an ELB.  This is meant to be
+# called in the context of a host (but locally); is
+# this the right place for it, or should it be in a
+# different role?
+
+- name: EC2 | Add a host to an LB
+  local_action:
+    module: ec2_elb
+    ec2_elbs:
+      - "{{ elb_name }}"
+    instance_id: "{{ ec2_id }}"
+    region: "{{ region }}"
+    state: present

@@ -1,0 +1,6 @@
+---
+# Once again, credentials should be elsewhere; not sure the best spot.
+app_db_user: rc_user
+app_db_password: changeme
+app_db_name: roundcube
+app_db_host: "{{ hostvars[ groups['tag_type_mysql_master'][0] ]['ec2_private_dns_name'] }}"

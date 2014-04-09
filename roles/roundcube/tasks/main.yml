@@ -1,0 +1,40 @@
+---
+- name: Git | Install package
+  apt: pkg=git
+
+- name: Apache | Create vhost for Roundcube
+  template:
+    src: roundcube.j2
+    dest: /etc/apache2/sites-available/roundcube
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Apache | Activate vhost for Roundcube
+  file:
+    path: /etc/apache2/sites-enabled/roundcube
+    state: link
+    src: /etc/apache2/sites-available/roundcube
+
+- name: Roundcube | Create web root for Roundcube
+  file:
+    path: /var/www/roundcube
+    owner: root
+    group: root
+    mode: 0755
+    state: directory
+
+- name: Roundcube | Install from Github
+  git:
+    repo: git://github.com/roundcube/roundcubemail/
+    dest: /var/www/roundcube
+    version: 1.0.0
+    depth: 1
+
+- name: Roundcube | Install config file in place
+  template:
+    src: config.inc.php.j2
+    dest: /var/www/roundcube/config/config.inc.php
+    owner: root
+    group: root
+    mode: 0644

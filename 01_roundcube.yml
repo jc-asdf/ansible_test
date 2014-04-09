@@ -1,0 +1,10 @@
+---
+# Set up Roundcube on existing db and web servers.
+# If using AWS, use the cloud setup first
+#
+# On a non-cloud environment, you'd set your inventory up with
+# the appropriate hosts in the appropriate tags, and run this from there.
+# Set cloud=false to bypass elb addition.
+
+- include: db_servers.yml
+- include: webservers.yml cloud=true

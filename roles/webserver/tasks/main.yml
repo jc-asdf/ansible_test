@@ -1,0 +1,17 @@
+---
+# Straight forward install of apache
+- name: Apache | Install package
+  apt: pkg=apache2
+  notify:
+  - restart apache
+- name: PHP5 | Install package
+  apt: pkg=php5
+  notify:
+  - restart apache
+- name: PHP5 | Install php5-mysql
+  apt: pkg=php5-mysql
+  notify:
+  - restart apache
+
+- name: Apache | Remove default site
+  file: path=/etc/apache2/sites-enabled/000-default state=absent

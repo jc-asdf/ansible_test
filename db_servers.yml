@@ -1,5 +1,22 @@
 ---
-- hosts: db_servers
+# Set up database servers.  Server IDs shouldn't be hardcoded here, but
+# was having a hard time figuring out how to generate them in a repeatable way
+# with no overlap.
+
+# Also ideally both masters and slaves should be able to be configured at the same
+# time.
+
+- hosts: 
+  - tag_type_mysql_master
+  remote_user: ubuntu
+  sudo: yes
   roles:
-   - common
-   - database
+  - common
+  - { role: database, mysql_role: master, mysql_server_id: 1}
+- hosts:
+  - tag_type_mysql_slave
+  remote_user: ubuntu
+  sudo: yes
+  roles:
+  - common
+  - { role: database, mysql_role: slave, mysql_server_id: 2 }

@@ -1,0 +1,2 @@
+# Password should be put somewhere else.
+mysql_replication_password: changeme

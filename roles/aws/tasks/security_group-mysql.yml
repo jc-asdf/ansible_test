@@ -1,0 +1,36 @@
+---
+# I had problems here - I needed to have 2 rules; I can't add a
+# security group to itself until it's created in the first place.
+# (and I want to do that so that the MySQL servers can talk to
+# each other).
+# Another one I'd want to discuss; I must be missing something.
+# I'd probably prefer using a VPC anyways to allow more flexible
+# security.
+
+- name: EC2 | Set up security group for MySQL
+  local_action:
+    module: ec2_group
+    name: mysql
+    description: MySQL access from web frontends
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        group_name: http
+
+- name: EC2 | Add self to MySQL security group
+  local_action:
+    module: ec2_group
+    name: mysql
+    description: MySQL access from web frontends
+    region: "{{ region }}"
+    rules:
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        group_name: mysql
+      - proto: tcp
+        from_port: 3306
+        to_port: 3306
+        group_name: http

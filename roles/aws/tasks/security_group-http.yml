@@ -1,3 +1,7 @@
+---
+# Perhaps all these security group setups should be joined down to something
+# more compact.
+
 - name: set up EC2 security group for HTTP and HTTPS access
   local_action:
     module: ec2_group

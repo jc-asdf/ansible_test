@@ -1,3 +1,6 @@
+---
+# I'd typically want to narrow down the IP range for this
+
 - name: set up EC2 security group for SSH access
   local_action:
     module: ec2_group

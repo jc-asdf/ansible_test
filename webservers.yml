@@ -1,0 +1,38 @@
+---
+# Set up the webservers to run roundcube.
+#
+# In the ideal world, I'd break this out more, so that the app and the infrastructure
+# (i.e. the concept of an Apache server ready for a generic app) were better split.
+# Also, I should have used pre- and post- tasks to handle the elb aspects better.
+#
+# If using Amazon RDB, you'd want to split out the SQL setup - perhaps use another task include
+# in place of the current database.yml
+
+# Another place where I'm having overlap issues between roles; I think if I redid this I'd want
+# to discuss house style and how others have solved these issues.
+
+# Set up a MySQL user, db, permissions, and import data
+- hosts: tag_type_mysql_master
+  remote_user: ubuntu
+  sudo: yes
+  vars_files:
+    - roles/roundcube/vars/main.yml
+  tasks:
+    - include: roles/roundcube/tasks/database.yml
+
+# Set up the webserver(s)
+- hosts: tag_type_webserver
+  remote_user: ubuntu
+  sudo: yes
+  roles:
+    - common
+    - webserver
+    - roundcube
+
+# Add hosts to an ELB
+- hosts: tag_type_webserver
+  connection: local
+  vars_files:
+    - roles/aws/vars/main.yml
+  tasks:
+    - { include: roles/aws/tasks/register_on_elb.yml, elb_name: roundcube,  when: "cloud == true" }

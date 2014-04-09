@@ -1,0 +1,11 @@
+---
+# May need to run the first time with ansible-playbook -i localhost
+# Split off from the main roundcube playbook to allow dynamic inventory to work a bit better
+
+# Will start up 2 web servers, a MySQL master, and a slave.  You can get rid of the slave or add
+# more if you want.
+
+- hosts: 127.0.0.1
+  connection: local
+  roles:
+    - {role: aws, webservers: 2, mysql_slaves: 1, app_name: roundcube}

@@ -1,0 +1,5 @@
+---
+# Update apt cache; otherwise run into update issues
+
+- name: Packages | Update apt cache
+  apt: update_cache=yes

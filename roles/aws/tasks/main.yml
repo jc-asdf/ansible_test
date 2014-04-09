@@ -1,4 +1,23 @@
 ---
+# General AWS setup - spawn EC2 instances, set up security groups, and an elb.
+
 - include: security_group-http.yml
 - include: security_group-ssh.yml
-- include: launch_instances.yml instance_type_tag=web exact_count=2
+- include: security_group-mysql.yml
+- include: elb.yml elb_name={{ app_name }}
+
+- include: launch_instances.yml
+  vars:
+    group_name: webserver
+    exact_count: "{{ webservers }}"
+    group: ['ssh', 'http']
+- include: launch_instances.yml
+  vars:
+    group_name: mysql_master 
+    exact_count: 1
+    group: ['ssh', 'mysql']
+- include: launch_instances.yml
+  vars:
+    group_name: mysql_slave
+    exact_count: "{{ mysql_slaves }}"
+    group: ['ssh', 'mysql']

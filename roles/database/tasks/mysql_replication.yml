@@ -1,0 +1,67 @@
+---
+# I don't, in general, like the idea of setting up replication via automated process.
+# Thus, I've added a check for any non-default-mysql DB - if it finds one, it'll skip all
+# this.  Also, if it sees some replication settings in place, it'll also skip.
+# This was mostly an excercise in figuring out how to co-ordinate info between 2+ servers.
+
+- name: MySQL Replication | Check if MySQL is currently unused
+  command: mysql -e 'select SCHEMA_NAME from information_schema.schemata where SCHEMA_NAME not in ("information_schema","mysql","performance_schema") union select 0' --skip-column-names --batch
+  changed_when: False
+  register: non_default_mysql_databases
+
+- name: MySQL Replication | Skip replication - non-default DBs exist
+  set_fact:
+    mysql_slave: False
+    mysql_master: False
+  when: non_default_mysql_databases.stdout != "0"
+
+# Set up some flags for future conditions
+- name: MySQL Replication | Set up replication as slave
+  set_fact:
+    mysql_slave: True
+    mysql_master: False
+  when: non_default_mysql_databases.stdout == "0" and mysql_role == "slave"
+
+- name: MySQL Replication | Set up replication as master
+  set_fact:
+    mysql_master: True
+    mysql_slave: False
+  when: non_default_mysql_databases.stdout == "0" and mysql_role == "master"
+
+- name: MySQL Replication | Set up replication user
+  mysql_user:
+    name: replication 
+    password: "{{ mysql_replication_password }}"
+    priv: "*.*:REPLICATION SLAVE"
+    host: "{{ hostvars[item]['ec2_private_dns_name']|default(hostvars[item]['private_dns_name']) }}"
+    state: present
+  with_items: groups['tag_type_mysql_slave']|default([])
+  when: mysql_master
+
+- name: MySQL Replication | Get master position
+  mysql_replication: mode=getmaster
+  register: mysql_master_info
+  when: mysql_master
+
+- name: MySQL Replication | Check if replication is already at all set up
+  command: mysql -e 'show slave status' --skip-column-names --batch
+  changed_when: False
+  register: replication_setup_exists
+  when: mysql_slave
+
+# Only runs this in the ideal case.  May break here in various cases, at which point
+# manual intervention is a good idea anyways probably!
+
+- name: MySQL Replication | Change master on the slave
+  mysql_replication:
+    mode: changemaster
+    master_host: "{{ hostvars[ groups['tag_type_mysql_master'][0] ]['ec2_private_dns_name'] }}"
+    master_user: replication
+    master_password: "{{ mysql_replication_password }}"
+    master_log_file: "{{ hostvars[ groups['tag_type_mysql_master'][0] ]['mysql_master_info']['File'] }}"
+    master_log_pos: "{{ hostvars[ groups['tag_type_mysql_master'][0] ]['mysql_master_info']['Position'] }}"
+  when: mysql_slave and replication_setup_exists.stdout == ""
+
+- name: MySQL Replication | Start slave
+  mysql_replication: mode=startslave
+  when: mysql_slave and replication_setup_exists.stdout == ""
